@@ -94,9 +94,9 @@ data/       — 生成资源文件与 SQLite 数据库
 
 | 类型 | 支持厂商 |
 |---|---|
-| **文本** | OpenAI(兼容接口)、Gemini |
-| **图片** | OpenAI、Gemini、火山引擎 |
-| **视频** | 火山引擎 Seedance 2.0(标准 / Fast / Mini)、MiniMax H3、阿里云百炼 Wan 3.0 (Prime / 标准) |
+| **文本** | Grok 兼容网关、OpenAI(兼容接口)、Gemini |
+| **图片** | Grok Imagine、OpenAI、Gemini、火山引擎 |
+| **视频** | Grok Imagine Video、火山引擎 Seedance 2.0(标准 / Fast / Mini)、MiniMax H3、阿里云百炼 Wan 3.0 (Prime / 标准) |
 
 ---
 
@@ -126,8 +126,15 @@ data/       — 生成资源文件与 SQLite 数据库
 | `FRONTEND_DIST` | `frontend/dist` | 前端静态产物目录 |
 | `FFMPEG_BIN` / `FFPROBE_BIN` | npm 内置二进制 | 自定义 ffmpeg/ffprobe 可执行文件路径 |
 | `PUBLIC_BASE_URL` | — | Seedance 引用本地参考资源时所需的公网地址（服务器部署用） |
+| `GROK_BASE_URL` | — | Grok 兼容网关地址，例如 `https://codecc.cc`。`GROK_API_BASE` 是别名 |
+| `GROK_API_KEY` | — | 该网关的 API Key。写在 `backend/.env`（已被 gitignore），不要提交到仓库 |
+| `GROK_TEXT_MODEL` | `grok-4.20-non-reasoning` | 文本模型。默认用非推理模型，避免多步 Agent 工具调用被思考链打断 |
+| `GROK_IMAGE_MODEL` | `grok-imagine-image` | 图片模型（`POST /v1/images/generations`） |
+| `GROK_VIDEO_MODEL` | `grok-imagine-video-1.5` | 视频模型（`POST /v1/videos/generations`，轮询 `GET /v1/videos/{request_id}`） |
 
-> **说明**：AI 服务的 API Key、Base URL 和模型参数全部在 Web 界面的「设置」页配置并入库，不在配置文件/环境变量中维护。
+> **只配 Grok 即可开箱**：同时设置 `GROK_BASE_URL` 和 `GROK_API_KEY` 后，启动会在数据库写入文本、图片、视频三条配置（名称 `Grok 文本` / `Grok 图片` / `Grok 视频`）。这条路径不需要 OpenAI、火山、可灵或其它厂商密钥。每次启动会刷新这三行的地址、密钥和模型列表，并保持启用；第一次创建时它们成为对应类型里优先级最高的配置。其它厂商仍可在「设置」页手动添加。
+>
+> 本地开发读取 `backend/.env`（`cd backend && npm run dev`）。Docker Compose 从仓库根目录 `.env` 传入同名变量。
 
 ### 📥 安装依赖
 

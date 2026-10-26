@@ -94,9 +94,9 @@ The interface ships in **中文 / English / 日本語 / 한국어**, with a glob
 
 | Type | Providers |
 |---|---|
-| **Text** | OpenAI (compatible APIs), Gemini |
-| **Image** | OpenAI, Gemini, Volcano Engine |
-| **Video** | Volcano Engine Seedance 2.0 (Standard / Fast / Mini), MiniMax H3, Alibaba Bailian Wan 3.0 (Prime / Standard) |
+| **Text** | Grok-compatible gateways, OpenAI (compatible APIs), Gemini |
+| **Image** | Grok Imagine, OpenAI, Gemini, Volcano Engine |
+| **Video** | Grok Imagine Video, Volcano Engine Seedance 2.0 (Standard / Fast / Mini), MiniMax H3, Alibaba Bailian Wan 3.0 (Prime / Standard) |
 
 ---
 
@@ -126,8 +126,15 @@ No config files — everything is set via environment variables (all have defaul
 | `FRONTEND_DIST` | `frontend/dist` | Frontend static build directory |
 | `FFMPEG_BIN` / `FFPROBE_BIN` | bundled npm binaries | Custom ffmpeg/ffprobe executable paths |
 | `PUBLIC_BASE_URL` | — | Public URL Seedance needs to reference local assets (server deployments) |
+| `GROK_BASE_URL` | — | Grok-compatible gateway origin, for example `https://codecc.cc`. `GROK_API_BASE` is an alias |
+| `GROK_API_KEY` | — | API key for that gateway. Put it in `backend/.env` (gitignored). Do not commit it |
+| `GROK_TEXT_MODEL` | `grok-4.20-non-reasoning` | Chat model. Non-reasoning by default so multi-step agents can call tools |
+| `GROK_IMAGE_MODEL` | `grok-imagine-image` | Image model (`POST /v1/images/generations`) |
+| `GROK_VIDEO_MODEL` | `grok-imagine-video-1.5` | Video model (`POST /v1/videos/generations`, poll `GET /v1/videos/{request_id}`) |
 
-> **Note**: AI service API keys, base URLs, and model parameters are all configured in the web UI "Settings" page and stored in the database — never in config files or environment variables.
+> **Grok-only setup**: when both `GROK_BASE_URL` and `GROK_API_KEY` are set, startup writes three database configs — text, image, and video — named `Grok 文本` / `Grok 图片` / `Grok 视频`. No other vendor key is required for that path. Restart refreshes the key, base URL, and model list for those three rows and keeps them enabled. The first time they are created they become the highest-priority config of each type. Other providers can still be added on the Settings page.
+>
+> Local dev reads `backend/.env` (`cd backend && npm run dev`). Docker Compose passes the same variables from the repo-root `.env`.
 
 ### 📥 Installation
 

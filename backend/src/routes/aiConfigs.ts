@@ -61,7 +61,8 @@ function buildProbe(serviceType: string, provider: string, baseUrl: string, mode
     }
   }
 
-  if (p === 'openai') {
+  if (p === 'openai' || p === 'grok') {
+    // Grok 网关与 OpenAI 兼容，文本/图片/视频都挂在同一把 key 的 /v1/models 下
     return {
       method: 'GET',
       url: joinProviderUrl(baseUrl, '/v1', '/models'),

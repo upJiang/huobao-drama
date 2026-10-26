@@ -9,6 +9,7 @@ import { now } from '../utils/response.js'
 import { downloadFile, fetchImageAsCompressedDataUrl, generateImageThumb, readImageAsCompressedDataUrl, readImageAsDataUrl, saveBase64Image } from '../utils/storage.js'
 import { extractVideoPoster } from '../utils/video-poster.js'
 import { getImageAdapter, getVideoAdapter } from './adapters/registry'
+import { grokAssetRequestHeaders, resolveGrokAssetUrl } from './adapters/grok-url'
 import type { AIConfig } from './adapters/types'
 import { logTaskError, logTaskPayload, logTaskProgress, logTaskStart, logTaskSuccess, logTaskWarn, redactUrl } from '../utils/task-logger.js'
 
@@ -281,7 +282,7 @@ async function processTask(id: number, config: AIConfig) {
 
       if (!isAsync && imageUrl) {
         logTaskProgress(label, 'sync-complete', { id, imageUrl })
-        await handleImageComplete(record, imageUrl)
+        await handleImageComplete(record, imageUrl, config)
         return
       }
 
@@ -306,7 +307,7 @@ async function processTask(id: number, config: AIConfig) {
 
     if (!isAsync && videoUrl) {
       logTaskProgress(label, 'sync-complete', { id, videoUrl })
-      await handleVideoComplete(record, videoUrl, params.duration)
+      await handleVideoComplete(record, videoUrl, params.duration, config)
       return
     }
 
@@ -374,7 +375,7 @@ async function pollTask(record: SysTaskRecord, config: AIConfig, taskId: string)
         if (type === 'image') {
           if (pollResp.imageUrl) {
             logTaskSuccess(label, 'poll-complete', { id: record.id, taskId, imageUrl: pollResp.imageUrl })
-            await handleImageComplete(record, pollResp.imageUrl)
+            await handleImageComplete(record, pollResp.imageUrl, config)
             return
           }
           if (adapter.provider === 'gemini') {
@@ -388,7 +389,7 @@ async function pollTask(record: SysTaskRecord, config: AIConfig, taskId: string)
           }
         } else if (pollResp.videoUrl) {
           logTaskSuccess(label, 'poll-complete', { id: record.id, taskId, videoUrl: pollResp.videoUrl })
-          await handleVideoComplete(record, pollResp.videoUrl, pollResp.duration)
+          await handleVideoComplete(record, pollResp.videoUrl, pollResp.duration, config)
           return
         }
       }
@@ -410,8 +411,19 @@ async function pollTask(record: SysTaskRecord, config: AIConfig, taskId: string)
   await failTask(record.id, 'Timeout: polling attempts exhausted')
 }
 
-async function handleImageComplete(record: SysTaskRecord, imageUrl: string) {
-  const localPath = await downloadFile(imageUrl, 'images')
+function prepareAssetDownload(config: AIConfig, assetUrl: string) {
+  if ((config.provider || '').toLowerCase() !== 'grok') {
+    return { url: assetUrl, headers: undefined as Record<string, string> | undefined }
+  }
+  return {
+    url: resolveGrokAssetUrl(config.baseUrl, assetUrl),
+    headers: grokAssetRequestHeaders(config.baseUrl, config.apiKey, assetUrl),
+  }
+}
+
+async function handleImageComplete(record: SysTaskRecord, imageUrl: string, config: AIConfig) {
+  const asset = prepareAssetDownload(config, imageUrl)
+  const localPath = await downloadFile(asset.url, 'images', asset.headers)
   // 列表页缩略图（前端按命名约定推导地址，失败不影响主流程）
   await generateImageThumb(localPath)
 
@@ -458,8 +470,9 @@ async function writeBackImageAssets(record: SysTaskRecord, localPath: string) {
   }
 }
 
-async function handleVideoComplete(record: SysTaskRecord, videoUrl: string, duration: number | null | undefined) {
-  const localPath = await downloadFile(videoUrl, 'videos')
+async function handleVideoComplete(record: SysTaskRecord, videoUrl: string, duration: number | null | undefined, config: AIConfig) {
+  const asset = prepareAssetDownload(config, videoUrl)
+  const localPath = await downloadFile(asset.url, 'videos', asset.headers)
   // 海报帧供列表/封面展示，避免前端为显示首帧缓冲整个视频
   await extractVideoPoster(localPath)
   await db.update(schema.sysTask)

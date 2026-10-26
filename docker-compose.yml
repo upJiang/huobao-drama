@@ -21,6 +21,12 @@ services:
       # 配置后设置页「关于更新」出现「立即更新」按钮；删除这两行则退化为手动更新提示
       HUOBAO_WATCHTOWER_URL: http://watchtower:8080
       HUOBAO_WATCHTOWER_TOKEN: ${WATCHTOWER_TOKEN:-please-change-me}
+      # 可选：只配 Grok 兼容网关即可跑通文本/图片/视频。留空则仍走设置页。
+      GROK_BASE_URL: ${GROK_BASE_URL:-}
+      GROK_API_KEY: ${GROK_API_KEY:-}
+      GROK_TEXT_MODEL: ${GROK_TEXT_MODEL:-}
+      GROK_IMAGE_MODEL: ${GROK_IMAGE_MODEL:-}
+      GROK_VIDEO_MODEL: ${GROK_VIDEO_MODEL:-}
       # 发布清单（默认 GitHub Releases latest.json，与桌面版同一份）
       # HUOBAO_UPDATE_FEED: https://github.com/chatfire-AI/huobao-drama/releases/latest/download/latest.json
     volumes:

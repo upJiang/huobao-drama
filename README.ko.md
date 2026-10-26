@@ -126,8 +126,13 @@ data/       — 생성된 에셋과 SQLite 데이터베이스
 | `FRONTEND_DIST` | `frontend/dist` | 프런트엔드 정적 빌드 디렉터리 |
 | `FFMPEG_BIN` / `FFPROBE_BIN` | npm 내장 바이너리 | 사용자 지정 ffmpeg/ffprobe 실행 파일 경로 |
 | `PUBLIC_BASE_URL` | — | Seedance가 로컬 참조 리소스를 사용할 때 필요한 공개 주소(서버 배포용) |
+| `GROK_BASE_URL` | — | Grok 호환 게이트웨이(예: `https://codecc.cc`). `GROK_API_BASE` 는 별칭 |
+| `GROK_API_KEY` | — | 해당 게이트웨이 API 키. `backend/.env` 에만 두고 커밋하지 않음 |
+| `GROK_TEXT_MODEL` | `grok-4.20-non-reasoning` | 텍스트 모델 |
+| `GROK_IMAGE_MODEL` | `grok-imagine-image` | 이미지 모델 |
+| `GROK_VIDEO_MODEL` | `grok-imagine-video-1.5` | 비디오 모델 |
 
-> **설명**：AI 서비스의 API Key, Base URL, 모델 파라미터는 모두 웹 UI의 「설정」 페이지에서 설정하여 데이터베이스에 저장합니다. 설정 파일이나 환경 변수로 관리하지 않습니다.
+> **설명**：`GROK_BASE_URL` 과 `GROK_API_KEY` 를 모두 설정하면 시작 시 텍스트·이미지·비디오 설정 세 줄이 데이터베이스에 기록되어, 다른 업체 키 없이 제작 흐름을 돌릴 수 있습니다. 그 외 공급자는 기존처럼 「설정」 페이지에서 관리합니다.
 
 ### 📥 설치
 
