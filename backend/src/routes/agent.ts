@@ -2,10 +2,12 @@
  * Agent 聊天路由 — 非流式版本
  */
 import { Hono } from 'hono'
+import { eq } from 'drizzle-orm'
 import { validAgentTypes } from '../agents/index.js'
 import { buildAgentRequestContext } from '../agents/context.js'
 import { mastra } from '../mastra/index.js'
-import { success, badRequest } from '../utils/response.js'
+import { db, schema } from '../db/index.js'
+import { success, badRequest, now } from '../utils/response.js'
 import { logTaskError, logTaskPayload, logTaskProgress, logTaskStart, logTaskSuccess } from '../utils/task-logger.js'
 
 const app = new Hono()
@@ -26,6 +28,22 @@ function normalizeToolName(entry: any) {
 function normalizeToolResult(entry: any) {
   const result = entry?.payload?.result ?? entry?.result ?? entry?.payload?.output ?? entry?.output ?? entry?.data ?? null
   return typeof result === 'string' ? result : JSON.stringify(result)
+}
+
+/**
+ * 部分模型会把格式化剧本直接写在回复里，却不调用 save_script。
+ * 回复以场景头开头时，按保存工具的同样字段落库，避免改写结果丢失。
+ */
+async function saveScriptFromAssistantText(episodeId: number, text: string, toolCalls: { toolName?: string | null }[]) {
+  const alreadySaved = toolCalls.some((tc) => /savescript/i.test(String(tc.toolName || '').replace(/[_\-\s]/g, '')))
+  if (alreadySaved) return null
+  const match = text.match(/^##\s*S\d+[\s\S]*$/m)
+  const content = match?.[0]?.trim()
+  if (!content || content.length < 12) return null
+  await db.update(schema.episodes)
+    .set({ scriptContent: content, updatedAt: now() })
+    .where(eq(schema.episodes.id, episodeId))
+  return content
 }
 
 // POST /agent/:type/chat — 非流式 Agent 对话
@@ -85,6 +103,15 @@ app.post('/:type/chat', async (c) => {
       toolName: normalizeToolName(tr),
       result: normalizeToolResult(tr),
     }))
+
+    if (agentType === 'script_rewriter') {
+      const saved = await saveScriptFromAssistantText(Number(episode_id), result.text || '', normalizedToolCalls)
+      if (saved) {
+        normalizedToolCalls.push({ toolName: 'saveScript', args: { content: saved } })
+        normalizedToolResults.push({ toolName: 'saveScript', result: JSON.stringify({ message: 'Script saved', word_count: saved.length, source: 'assistant_text' }) })
+        logTaskProgress('Agent', 'script-saved-from-text', { episodeId: episode_id, wordCount: saved.length })
+      }
+    }
 
     logTaskProgress('Agent', 'tool-summary', {
       agentType,

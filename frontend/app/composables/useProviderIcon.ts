@@ -17,6 +17,7 @@ const FILENAMES: Record<string, string> = {
   aliyun: 'qwen-color.png',  // 阿里云 Wan 系列与 Qwen 同属阿里，共用图标
   zhipu: 'zhipu-color.png',
   xai: 'grok.png',
+  grok: 'grok.png',
   xiaomi: 'xiaomi-color.png',
   vidu: 'vidu-color.png',
   ollama: 'ollama.png',

@@ -10,16 +10,16 @@ import { STORAGE_ROOT } from './paths.js'
 /**
  * 下载远程文件到本地存储
  */
-export async function downloadFile(url: string, subDir: string): Promise<string> {
+export async function downloadFile(url: string, subDir: string, headers?: Record<string, string>): Promise<string> {
   const dir = path.join(STORAGE_ROOT, subDir)
   fs.mkdirSync(dir, { recursive: true })
 
-  const ext = getExtFromUrl(url)
+  const resp = await fetch(url, { headers })
+  if (!resp.ok) throw new Error(`Download failed: ${resp.status}`)
+
+  const ext = extensionFromResponse(url, resp.headers.get('content-type'))
   const filename = `${uuid()}${ext}`
   const filePath = path.join(dir, filename)
-
-  const resp = await fetch(url)
-  if (!resp.ok) throw new Error(`Download failed: ${resp.status}`)
 
   const buffer = Buffer.from(await resp.arrayBuffer())
   fs.writeFileSync(filePath, buffer)
@@ -49,6 +49,19 @@ function getExtFromUrl(url: string): string {
     const ext = path.extname(pathname)
     if (ext && ext.length <= 5) return ext
   } catch {}
+  return '.bin'
+}
+
+/** 网关内容地址常常没有扩展名（/v1/videos/{id}/content），用 Content-Type 补上 */
+function extensionFromResponse(url: string, contentType: string | null): string {
+  const fromUrl = getExtFromUrl(url)
+  if (fromUrl !== '.bin') return fromUrl
+  const type = (contentType || '').toLowerCase()
+  if (type.includes('video/mp4')) return '.mp4'
+  if (type.includes('image/jpeg')) return '.jpg'
+  if (type.includes('image/png')) return '.png'
+  if (type.includes('image/webp')) return '.webp'
+  if (type.includes('image/gif')) return '.gif'
   return '.bin'
 }
 
