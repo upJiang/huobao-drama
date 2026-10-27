@@ -10,6 +10,8 @@ import { MiniMaxVideoAdapter } from './minimax-video'
 import { AliyunWanVideoAdapter } from './aliyun-wan-video'
 import { GrokImageAdapter } from './grok-image'
 import { GrokVideoAdapter } from './grok-video'
+import { GrsaiImageAdapter } from './grsai-image'
+import { GrsaiVideoAdapter } from './grsai-video'
 import type { ImageProviderAdapter, VideoProviderAdapter } from './types'
 
 // 图片 Adapter 注册表
@@ -18,6 +20,7 @@ export const imageAdapters: Record<string, ImageProviderAdapter> = {
   gemini: new GeminiImageAdapter(),
   volcengine: new VolcEngineImageAdapter(),
   grok: new GrokImageAdapter(),
+  grsai: new GrsaiImageAdapter(),
 }
 
 // 视频 Adapter 注册表
@@ -26,6 +29,7 @@ export const videoAdapters: Record<string, VideoProviderAdapter> = {
   minimax: new MiniMaxVideoAdapter(),
   aliyun: new AliyunWanVideoAdapter(),
   grok: new GrokVideoAdapter(),
+  grsai: new GrsaiVideoAdapter(),
 }
 
 /**

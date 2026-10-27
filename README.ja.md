@@ -131,6 +131,10 @@ data/       — 生成アセットと SQLite データベース
 | `GROK_TEXT_MODEL` | `grok-4.20-non-reasoning` | テキストモデル |
 | `GROK_IMAGE_MODEL` | `grok-imagine-image` | 画像モデル |
 | `GROK_VIDEO_MODEL` | `grok-imagine-video-1.5` | 動画モデル |
+| `GRSAI_BASE_URL` | — | Grsai メディア。グローバル `https://grsaiapi.com`、中国 `https://grsai.dakka.com.cn` |
+| `GRSAI_API_KEY` | — | Grsai の API キー。Grok のキーとは別にし、コミットしない |
+| `GRSAI_IMAGE_MODEL` | `gpt-image-2.5` | 画像モデル |
+| `GRSAI_VIDEO_MODEL` | `minimax-h3` | 動画モデル。テキスト設定は変更しない |
 
 > **説明**：`GROK_BASE_URL` と `GROK_API_KEY` を両方設定すると、起動時にテキスト・画像・動画の 3 設定がデータベースへ書き込まれ、他社のキーなしで制作できます。それ以外のプロバイダは従来どおり「設定」ページで管理します。
 

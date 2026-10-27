@@ -95,8 +95,8 @@ The interface ships in **中文 / English / 日本語 / 한국어**, with a glob
 | Type | Providers |
 |---|---|
 | **Text** | Grok-compatible gateways, OpenAI (compatible APIs), Gemini |
-| **Image** | Grok Imagine, OpenAI, Gemini, Volcano Engine |
-| **Video** | Grok Imagine Video, Volcano Engine Seedance 2.0 (Standard / Fast / Mini), MiniMax H3, Alibaba Bailian Wan 3.0 (Prime / Standard) |
+| **Image** | Grok Imagine, Grsai gpt-image-2.5, OpenAI, Gemini, Volcano Engine |
+| **Video** | Grok Imagine Video, Grsai MiniMax H3, Volcano Engine Seedance 2.0 (Standard / Fast / Mini), official MiniMax H3, Alibaba Bailian Wan 3.0 (Prime / Standard) |
 
 ---
 
@@ -131,8 +131,14 @@ No config files — everything is set via environment variables (all have defaul
 | `GROK_TEXT_MODEL` | `grok-4.20-non-reasoning` | Chat model. Non-reasoning by default so multi-step agents can call tools |
 | `GROK_IMAGE_MODEL` | `grok-imagine-image` | Image model (`POST /v1/images/generations`) |
 | `GROK_VIDEO_MODEL` | `grok-imagine-video-1.5` | Video model (`POST /v1/videos/generations`, poll `GET /v1/videos/{request_id}`) |
+| `GRSAI_BASE_URL` | — | Grsai media host. Global `https://grsaiapi.com`, China `https://grsai.dakka.com.cn` |
+| `GRSAI_API_KEY` | — | Grsai API key. Keep it separate from the Grok key, in `backend/.env` only |
+| `GRSAI_IMAGE_MODEL` | `gpt-image-2.5` | Image model (`POST /v1/api/generate`) |
+| `GRSAI_VIDEO_MODEL` | `minimax-h3` | Video model. Portrait shorts: 768p, 10 seconds. 1080p is capped at 10 seconds |
 
 > **Grok-only setup**: when both `GROK_BASE_URL` and `GROK_API_KEY` are set, startup writes three database configs — text, image, and video — named `Grok 文本` / `Grok 图片` / `Grok 视频`. No other vendor key is required for that path. Restart refreshes the key, base URL, and model list for those three rows and keeps them enabled. The first time they are created they become the highest-priority config of each type. Other providers can still be added on the Settings page.
+>
+> **Grsai for media, Grok for text**: also set `GRSAI_BASE_URL` and `GRSAI_API_KEY`. Startup upserts only `Grsai 图片` and `Grsai 视频` (`gpt-image-2.5` / `minimax-h3`). It does not edit the Grok text row and does not delete the Grok image or video rows. The first insert gets a higher priority, so image and video default to Grsai. Switch back from Settings, or pick another model in the episode workspace. Use `https://grsai.dakka.com.cn` for the China node.
 >
 > Local dev reads `backend/.env` (`cd backend && npm run dev`). Docker Compose passes the same variables from the repo-root `.env`.
 

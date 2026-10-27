@@ -7,7 +7,8 @@ import { eq } from 'drizzle-orm'
 import { getActiveConfig, getConfigById } from './ai.js'
 import { now } from '../utils/response.js'
 import { downloadFile, fetchImageAsCompressedDataUrl, generateImageThumb, readImageAsCompressedDataUrl, readImageAsDataUrl, saveBase64Image } from '../utils/storage.js'
-import { extractVideoPoster } from '../utils/video-poster.js'
+import { extractVideoLastFrame, extractVideoPoster } from '../utils/video-poster.js'
+import { pickPreviousLastFrame } from './adapters/grsai-prompt.js'
 import { getImageAdapter, getVideoAdapter } from './adapters/registry'
 import { grokAssetRequestHeaders, resolveGrokAssetUrl } from './adapters/grok-url'
 import type { AIConfig } from './adapters/types'
@@ -105,6 +106,7 @@ export async function generateVideo(params: GenerateVideoParams): Promise<number
     ? (await getConfigById(params.configId)) ?? await getActiveConfig('video')
     : await getActiveConfig('video')
   if (!config) throw new Error('未配置视频模型，请先到「设置」页添加并启用 AI 服务')
+  params = await withGrsaiContinuityFrame(config, params)
 
   const id = await createTask('video', config, {
     storyboardId: params.storyboardId,
@@ -482,10 +484,33 @@ async function handleVideoComplete(record: SysTaskRecord, videoUrl: string, dura
   logTaskSuccess('VideoTask', 'downloaded', { id: record.id, localPath, storyboardId: record.storyboardId, duration })
 
   if (record.storyboardId) {
+    const lastFrameImage = await extractVideoLastFrame(localPath)
     await db.update(schema.storyboards)
-      .set({ videoUrl: localPath, duration: duration || undefined, updatedAt: now() })
+      .set({
+        videoUrl: localPath,
+        duration: duration || undefined,
+        ...(lastFrameImage ? { lastFrameImage } : {}),
+        updatedAt: now(),
+      })
       .where(eq(schema.storyboards.id, record.storyboardId))
   }
+}
+
+/** Grsai 没有单独的首帧字段。上一镜末帧放进 firstFrameUrl，适配器会把它排进 images[0]。 */
+async function withGrsaiContinuityFrame(config: AIConfig, params: GenerateVideoParams): Promise<GenerateVideoParams> {
+  if ((config.provider || '').toLowerCase() !== 'grsai') return params
+  if (params.firstFrameUrl || !params.storyboardId) return params
+  const [sb] = await db.select().from(schema.storyboards).where(eq(schema.storyboards.id, params.storyboardId))
+  if (!sb) return params
+  const shots = await db.select().from(schema.storyboards).where(eq(schema.storyboards.episodeId, sb.episodeId))
+  const lastFrame = pickPreviousLastFrame(shots.map((shot) => ({
+    id: shot.id,
+    number: shot.storyboardNumber,
+    lastFrame: shot.lastFrameImage,
+    deleted: !!shot.deletedAt,
+  })), sb.id)
+  if (!lastFrame) return params
+  return { ...params, firstFrameUrl: lastFrame }
 }
 
 // ─── 参考素材归一化 ───────────────────────────────────────────────

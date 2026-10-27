@@ -749,7 +749,7 @@ const serviceTypes = computed(() => [
   { type: 'image', label: t('common.serviceType.image') },
   { type: 'video', label: t('common.serviceType.video') },
 ])
-const providers = ['grok', 'gemini', 'openai', 'volcengine', 'minimax', 'aliyun']
+const providers = ['grok', 'grsai', 'gemini', 'openai', 'volcengine', 'minimax', 'aliyun']
 const providerSelectOptions = computed(() => providers.map(p => ({ label: p, value: p })))
 const serviceMeta = computed(() => ({
   text: { label: t('common.serviceType.text'), desc: t('settings.ai.meta.text') },
@@ -763,11 +763,13 @@ const providerPresets = {
     openai: { label: 'OpenAI 官方', baseUrl: 'https://api.openai.com', models: ['deepseek-v4-pro', 'gpt-5.6-terra'] },
   },
   image: {
+    grsai: { label: 'Grsai 图片', baseUrl: 'https://grsaiapi.com', models: ['gpt-image-2.5'] },
     grok: { label: 'Grok Imagine', baseUrl: 'https://codecc.cc', models: ['grok-imagine-image', 'grok-imagine-image-2.0', 'grok-imagine-image-quality'] },
     gemini: { label: 'Gemini 官方', baseUrl: 'https://generativelanguage.googleapis.com', models: ['gemini-3-pro-image', 'gemini-3.1-flash-image'] },
     openai: { label: 'OpenAI 官方', baseUrl: 'https://api.openai.com', models: ['gpt-image-2'] },
   },
   video: {
+    grsai: { label: 'Grsai MiniMax H3', baseUrl: 'https://grsaiapi.com', models: ['minimax-h3'] },
     grok: { label: 'Grok Imagine Video', baseUrl: 'https://codecc.cc', models: ['grok-imagine-video-1.5', 'grok-imagine-video'] },
     aliyun: { label: '阿里云百炼 Wan 3.0', baseUrl: 'https://{WorkspaceId}.cn-beijing.maas.aliyuncs.com', models: ['wan3.0-video', 'wan3.0-video-prime'] },
     volcengine: { label: 'Seedance 2.0 官方', baseUrl: 'https://ark.cn-beijing.volces.com', models: ['doubao-seedance-2-0-mini-260615', 'doubao-seedance-2-0-fast-260128', 'doubao-seedance-2-0-260128'] },

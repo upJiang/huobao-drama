@@ -30,8 +30,8 @@ export function parseConfigTemperature(settingsRaw: string | null | undefined): 
 
 export const officialProviders: Record<ServiceType, readonly string[]> = {
   text: ['openai', 'gemini', 'volcengine', 'grok'],
-  image: ['openai', 'gemini', 'volcengine', 'grok'],
-  video: ['volcengine', 'minimax', 'aliyun', 'grok'],
+  image: ['openai', 'gemini', 'volcengine', 'grok', 'grsai'],
+  video: ['volcengine', 'minimax', 'aliyun', 'grok', 'grsai'],
 }
 
 export function isOfficialProvider(serviceType?: string | null, provider?: string | null): boolean {

@@ -27,6 +27,11 @@ services:
       GROK_TEXT_MODEL: ${GROK_TEXT_MODEL:-}
       GROK_IMAGE_MODEL: ${GROK_IMAGE_MODEL:-}
       GROK_VIDEO_MODEL: ${GROK_VIDEO_MODEL:-}
+      # 可选：Grsai 图片/视频。留空则不写入。文本仍由 GROK_* 负责。
+      GRSAI_BASE_URL: ${GRSAI_BASE_URL:-}
+      GRSAI_API_KEY: ${GRSAI_API_KEY:-}
+      GRSAI_IMAGE_MODEL: ${GRSAI_IMAGE_MODEL:-}
+      GRSAI_VIDEO_MODEL: ${GRSAI_VIDEO_MODEL:-}
       # 发布清单（默认 GitHub Releases latest.json，与桌面版同一份）
       # HUOBAO_UPDATE_FEED: https://github.com/chatfire-AI/huobao-drama/releases/latest/download/latest.json
     volumes:
