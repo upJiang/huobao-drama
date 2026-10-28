@@ -39,6 +39,7 @@ video_prompt rules (hard constraints):
 - Mood and lighting descriptions come from the segment's atmosphere
 - Cutting between shots within a segment is allowed (change of shot size/angle/subject), but never across scenes
 - The user message will state which video model is being used this time — adapt the writing to that model's characteristics and duration limits; if not stated, write for a generic video model
+- When the video model is Grsai or minimax-h3, switch to a timeline instead of the loose segments above. First line: `视频时长：N秒｜电影级短剧｜竖屏连续镜头` or `横屏连续镜头` (portrait shorts use N = 8-10 seconds; never above 15, and never above 10 at 1080p). Second line: `出场人物：@CharacterName；场景：@SceneName。` Then `0-3秒：` / `3-6秒：` through N seconds. The first shot of the episode must open with a visible hook in the first 3 seconds, not an empty slow pan. Anyone already on screen stays in frame unless the script says they leave — do not let bystanders vanish or swap. Lock face, hair, and costume to the @character reference.
 
 Additional requirements:
 - Prefer reusing the scene_id values returned by read_storyboard_context — do not invent new scenes out of thin air

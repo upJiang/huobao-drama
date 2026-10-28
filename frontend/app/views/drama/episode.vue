@@ -2037,12 +2037,14 @@ const RESOLUTION_TIERS = {
   minimax: ['720p', '1080p'],
   aliyun: ['480p', '720p', '1080p'],
   grok: ['480p', '720p', '1080p'],
+  grsai: ['480p', '720p', '1080p'],
 }
 const RESOLUTION_DISPLAY = {
   volcengine: { '480p': '480p', '720p': '720p', '1080p': '720p' },
   minimax: { '480p': '768P', '720p': '768P', '1080p': '2K' },
   aliyun: { '480p': '480P', '720p': '720P', '1080p': '1080P' },
   grok: { '480p': '480p', '720p': '720p', '1080p': '1080p' },
+  grsai: { '480p': '480p', '720p': '768p', '1080p': '1080p' },
 }
 const resolutionProvider = computed(() => RESOLUTION_TIERS[selectedVideoConfig.value?.provider] ? selectedVideoConfig.value.provider : 'volcengine')
 const resolutionOptions = computed(() => RESOLUTION_TIERS[resolutionProvider.value].map(key => ({
@@ -2161,7 +2163,14 @@ function confirmBatchVideos() {
   batchVideoConfirm.value = { open: false, targets: [] }
   if (!targets.length) return
   const ids = targets.map(s => s.id)
-  targets.forEach(sb => genVid(sb, { silent: true }))
+  // Grsai 要等上一镜末帧落盘再开下一镜，批量改为顺序生成；其它厂商仍并行。
+  if (selectedVideoConfig.value?.provider === 'grsai') {
+    ;(async () => {
+      for (const sb of targets) await genVid(sb, { silent: true })
+    })()
+  } else {
+    targets.forEach(sb => genVid(sb, { silent: true }))
+  }
   toast.success(t('episode.vid.batchStarted', { n: ids.length }))
   watchAsyncResult(() => ids.every(id => {
     const target = sbs.value.find(s => s.id === id)
@@ -2794,8 +2803,11 @@ function doBreakdown() {
   const propList = propItems.value.length
     ? propItems.value.map(p => `${p.name}(ID:${p.id})`).join('、')
     : '（当前集还没有道具）'
+  const grsaiShape = selectedVideoConfig.value?.provider === 'grsai'
+    ? '本次是 Grsai MiniMax H3：video_prompt 用时间轴。第一行「视频时长：N秒｜电影级短剧｜竖屏或横屏连续镜头」（竖屏 N 用 8-10 秒），第二行出场人物与场景仍用 @角色名/@场景名，然后写 0-3秒、3-6秒直到覆盖 N 秒。已出场的人不得无故消失或换人。全片第一个分镜的 0-3 秒要有可见钩子，不要空镜慢摇。'
+    : '请按该模型的特性与时长限制生成 video_prompt。'
   runAgent('storyboard_breaker', `请基于当前集剧本拆分分镜，并为每个分镜段落同时生成 video_prompt（视频生成提示词）。
-本次视频模型：${effectiveVideoModelLabel.value}，请按该模型的特性与时长限制生成 video_prompt。
+本次视频模型：${effectiveVideoModelLabel.value}。${grsaiShape}
 
 当前集已有角色：${charList}
 当前集已有场景：${sceneList}
@@ -2821,6 +2833,9 @@ async function genVideoPrompt(sb) {
   const idx = sbs.value.indexOf(sb) + 1
   const cfg = selectedVideoConfig.value
   const label = cfg ? `${cfg.name} (${cfg.provider})` : '默认'
+  const shape = cfg?.provider === 'grsai'
+    ? 'video_prompt 使用 MiniMax 时间轴：第一行「视频时长：N秒｜电影级短剧｜竖屏或横屏连续镜头」（竖屏短剧 N 用 8-10 秒），第二行出场人物与场景仍用 @角色名/@场景名，然后写 0-3秒、3-6秒直到覆盖 N 秒。已出场的人不得无故消失或换人。若这是全片第一个分镜，0-3 秒要有可见钩子，不要空镜慢摇'
+    : '按 3 秒分段换行、用 @角色名/@场景名/@道具名 引用参考素材；段落内允许多镜头切镜,但不跨场景,切镜点对齐 description 的【镜头N】结构'
   const charNames = getStoryboardCharacters(sb).map(c => c.name).join('、') || '无'
   const propNames = getStoryboardProps(sb).map(p => p.name).join('、') || '无'
   videoPromptGeneratingIds.value.push(sb.id)
@@ -2830,7 +2845,7 @@ async function genVideoPrompt(sb) {
 
 该分镜信息:时长 ${sb.duration || 10}s;场景:${getSceneName(sb) || '未绑定'};角色:${charNames};道具:${propNames}。
 
-请先调用 read_storyboard_context 获取该分镜的画面描述(含【镜头N】子镜头与台词/旁白)、氛围及时长,据此生成 video_prompt(按 3 秒分段换行、用 @角色名/@场景名/@道具名 引用参考素材；段落内允许多镜头切镜,但不跨场景,切镜点对齐 description 的【镜头N】结构),然后调用 update_storyboard 保存到分镜 ID:${sb.id}。只更新 video_prompt 字段,不要改动其他字段,不要重新拆分整集。`,
+请先调用 read_storyboard_context 获取该分镜的画面描述(含【镜头N】子镜头与台词/旁白)、氛围及时长,据此生成 video_prompt(${shape}),然后调用 update_storyboard 保存到分镜 ID:${sb.id}。只更新 video_prompt 字段,不要改动其他字段,不要重新拆分整集。`,
       drama_id: dramaId,
       episode_id: epId.value,
       model: chatModelOverride() || undefined,
@@ -3035,19 +3050,27 @@ function formatHistoryTime(iso) {
   return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
+// Grsai 把参考图按数组顺序锁外观，没有单独的角色槽。角色放前面，满 9 张时先丢掉场景和道具。
+function orderedShotReferenceAssets(sb) {
+  const scene = getStoryboardScene(sb)
+  const sceneAsset = { name: scene?.location || '', imageUrl: scene?.image_url || scene?.imageUrl || '' }
+  const charAssets = getStoryboardCharacters(sb).map(char => ({
+    name: char?.name || '',
+    imageUrl: char?.image_url || char?.imageUrl || '',
+  }))
+  const propAssets = getStoryboardProps(sb).map(prop => ({
+    name: prop?.name || '',
+    imageUrl: prop?.image_url || prop?.imageUrl || '',
+  }))
+  if (selectedVideoConfig.value?.provider === 'grsai') return [...charAssets, sceneAsset, ...propAssets]
+  return [sceneAsset, ...charAssets, ...propAssets]
+}
 function getShotReferenceImages(sb) {
   const refs = []
-  const pushRef = (value) => {
-    if (!value || refs.includes(value) || refs.length >= refImageLimit.value) return
+  for (const asset of orderedShotReferenceAssets(sb)) {
+    const value = asset.imageUrl
+    if (!value || refs.includes(value) || refs.length >= refImageLimit.value) continue
     refs.push(value)
-  }
-  const scene = getStoryboardScene(sb)
-  pushRef(scene?.image_url || scene?.imageUrl)
-  for (const char of getStoryboardCharacters(sb)) {
-    pushRef(char?.image_url || char?.imageUrl)
-  }
-  for (const prop of getStoryboardProps(sb)) {
-    pushRef(prop?.image_url || prop?.imageUrl)
   }
   return refs
 }
@@ -3167,18 +3190,10 @@ const mentionOptions = computed(() => {
 function getShotReferenceIndexMap(sb) {
   const ordered = []
   const seen = new Set()
-  const push = (name, url) => {
-    if (!url || seen.has(url) || ordered.length >= refImageLimit.value) return
-    seen.add(url)
-    ordered.push({ name, imageUrl: url })
-  }
-  const scene = getStoryboardScene(sb)
-  push(scene?.location || '', scene?.image_url || scene?.imageUrl)
-  for (const char of getStoryboardCharacters(sb)) {
-    push(char.name || '', char?.image_url || char?.imageUrl)
-  }
-  for (const prop of getStoryboardProps(sb)) {
-    push(prop.name || '', prop?.image_url || prop?.imageUrl)
+  for (const asset of orderedShotReferenceAssets(sb)) {
+    if (!asset.imageUrl || seen.has(asset.imageUrl) || ordered.length >= refImageLimit.value) continue
+    seen.add(asset.imageUrl)
+    ordered.push(asset)
   }
   const nameToIndex = {}
   ordered.forEach((a, i) => { if (a.name && !(a.name in nameToIndex)) nameToIndex[a.name] = i + 1 })

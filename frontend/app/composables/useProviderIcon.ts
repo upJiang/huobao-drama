@@ -43,6 +43,7 @@ const MODEL_PROVIDER_HINTS: [RegExp, string][] = [
   [/kimi|moonshot/i, 'moonshot'],
   [/qwen|^wan[\d.-]/i, 'qwen'],
   [/glm|zhipu|chatglm/i, 'zhipu'],
+  [/minimax/i, 'minimax'],
   [/grok/i, 'xai'],
   [/^(gpt|chatgpt|o[1-9])/i, 'openai'],
 ]

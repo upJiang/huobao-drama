@@ -28,7 +28,7 @@ test('settings page exposes official provider templates only', () => {
   assert.doesNotMatch(useApi, /huobaoPreset/i)
   assert.doesNotMatch(useApi, /\/huobao-preset/)
 
-  assert.match(settingsPage, /const providers = \['gemini', 'openai', 'volcengine', 'minimax', 'aliyun'\]/)
+  assert.match(settingsPage, /const providers = \['grok', 'grsai', 'gemini', 'openai', 'volcengine', 'minimax', 'aliyun'\]/)
   assert.match(settingsPage, /https:\/\/generativelanguage\.googleapis\.com/)
   assert.match(settingsPage, /https:\/\/api\.openai\.com/)
   assert.match(settingsPage, /https:\/\/ark\.cn-beijing\.volces\.com/)
@@ -83,7 +83,9 @@ test('settings page offers the supported official provider presets', () => {
   assert.doesNotMatch(providerPresetBlock('image'), /'ali'|minimax/i)
   assert.match(providerPresetBlock('video'), /volcengine/)
   assert.match(providerPresetBlock('video'), /minimax/)
+  assert.match(providerPresetBlock('video'), /grsai/)
   assert.match(providerPresetBlock('video'), /aliyun/)
+  assert.doesNotMatch(providerPresetBlock('text'), /grsai/)
   assert.doesNotMatch(providerPresetBlock('video'), /'vidu'/i)
   assert.doesNotMatch(settingsPage, /audio:\s*\{/)
 })

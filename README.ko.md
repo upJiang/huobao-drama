@@ -131,6 +131,10 @@ data/       — 생성된 에셋과 SQLite 데이터베이스
 | `GROK_TEXT_MODEL` | `grok-4.20-non-reasoning` | 텍스트 모델 |
 | `GROK_IMAGE_MODEL` | `grok-imagine-image` | 이미지 모델 |
 | `GROK_VIDEO_MODEL` | `grok-imagine-video-1.5` | 비디오 모델 |
+| `GRSAI_BASE_URL` | — | Grsai 미디어. 글로벌 `https://grsaiapi.com`, 중국 `https://grsai.dakka.com.cn` |
+| `GRSAI_API_KEY` | — | Grsai API 키. Grok 키와 분리하고 커밋하지 않음 |
+| `GRSAI_IMAGE_MODEL` | `gpt-image-2.5` | 이미지 모델 |
+| `GRSAI_VIDEO_MODEL` | `minimax-h3` | 비디오 모델. 텍스트 설정은 바꾸지 않음 |
 
 > **설명**：`GROK_BASE_URL` 과 `GROK_API_KEY` 를 모두 설정하면 시작 시 텍스트·이미지·비디오 설정 세 줄이 데이터베이스에 기록되어, 다른 업체 키 없이 제작 흐름을 돌릴 수 있습니다. 그 외 공급자는 기존처럼 「설정」 페이지에서 관리합니다.
 

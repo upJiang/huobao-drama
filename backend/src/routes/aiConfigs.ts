@@ -95,6 +95,16 @@ function buildProbe(serviceType: string, provider: string, baseUrl: string, mode
     }
   }
 
+  if (p === 'grsai') {
+    // 只探测结果查询，避免空的 /generate 真的创建计费任务。
+    return {
+      method: 'GET',
+      url: joinProviderUrl(baseUrl, '/v1/api', '/result') + '?id=huobao-probe',
+      headers: bearerHeaders(apiKey),
+      body: undefined,
+    }
+  }
+
   if (p === 'aliyun') {
     // Wan 3.0 仅支持异步提交；空请求体不会创建计费任务，仅用于验证地域端点与鉴权是否可达。
     return {

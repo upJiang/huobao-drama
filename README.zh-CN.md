@@ -95,8 +95,8 @@ data/       — 生成资源文件与 SQLite 数据库
 | 类型 | 支持厂商 |
 |---|---|
 | **文本** | Grok 兼容网关、OpenAI(兼容接口)、Gemini |
-| **图片** | Grok Imagine、OpenAI、Gemini、火山引擎 |
-| **视频** | Grok Imagine Video、火山引擎 Seedance 2.0(标准 / Fast / Mini)、MiniMax H3、阿里云百炼 Wan 3.0 (Prime / 标准) |
+| **图片** | Grok Imagine、Grsai gpt-image-2.5、OpenAI、Gemini、火山引擎 |
+| **视频** | Grok Imagine Video、Grsai MiniMax H3、火山引擎 Seedance 2.0(标准 / Fast / Mini)、MiniMax H3 官方、阿里云百炼 Wan 3.0 (Prime / 标准) |
 
 ---
 
@@ -131,8 +131,14 @@ data/       — 生成资源文件与 SQLite 数据库
 | `GROK_TEXT_MODEL` | `grok-4.20-non-reasoning` | 文本模型。默认用非推理模型，避免多步 Agent 工具调用被思考链打断 |
 | `GROK_IMAGE_MODEL` | `grok-imagine-image` | 图片模型（`POST /v1/images/generations`） |
 | `GROK_VIDEO_MODEL` | `grok-imagine-video-1.5` | 视频模型（`POST /v1/videos/generations`，轮询 `GET /v1/videos/{request_id}`） |
+| `GRSAI_BASE_URL` | — | Grsai 媒体节点。全球 `https://grsaiapi.com`，国内 `https://grsai.dakka.com.cn` |
+| `GRSAI_API_KEY` | — | Grsai 的 API Key。与 Grok 密钥分开，只放 `backend/.env`，不要提交 |
+| `GRSAI_IMAGE_MODEL` | `gpt-image-2.5` | 图片模型（`POST /v1/api/generate`） |
+| `GRSAI_VIDEO_MODEL` | `minimax-h3` | 视频模型。竖屏建议 768p、10 秒；1080p 最长 10 秒 |
 
 > **只配 Grok 即可开箱**：同时设置 `GROK_BASE_URL` 和 `GROK_API_KEY` 后，启动会在数据库写入文本、图片、视频三条配置（名称 `Grok 文本` / `Grok 图片` / `Grok 视频`）。这条路径不需要 OpenAI、火山、可灵或其它厂商密钥。每次启动会刷新这三行的地址、密钥和模型列表，并保持启用；第一次创建时它们成为对应类型里优先级最高的配置。其它厂商仍可在「设置」页手动添加。
+>
+> **媒体改走 Grsai、文本继续 Grok**：再设置 `GRSAI_BASE_URL` 和 `GRSAI_API_KEY`。启动只新增或更新「Grsai 图片」「Grsai 视频」两行（模型 `gpt-image-2.5` / `minimax-h3`），不改 Grok 文本，也不删除 Grok 图片/视频。第一次插入时这两行优先级更高，所以图片和视频默认走 Grsai。设置页可以随时把某一行设为默认，或在工作台的模型下拉里切换。国内节点把 Base URL 改成 `https://grsai.dakka.com.cn`。
 >
 > 本地开发读取 `backend/.env`（`cd backend && npm run dev`）。Docker Compose 从仓库根目录 `.env` 传入同名变量。
 

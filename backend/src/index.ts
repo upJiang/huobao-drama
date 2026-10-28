@@ -29,6 +29,7 @@ import { eq } from 'drizzle-orm'
 import { now } from './utils/response.js'
 import { DATA_ROOT } from './utils/paths.js'
 import { bootstrapGrokConfigs } from './services/grok-env.js'
+import { bootstrapGrsaiConfigs } from './services/grsai-env.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const projectRoot = path.resolve(__dirname, '../..')
@@ -88,6 +89,7 @@ app.get('*', serveStatic({ root: distPath, path: 'index.html' }))
 
 const port = Number(process.env.PORT || 5679)
 await bootstrapGrokConfigs()
+await bootstrapGrsaiConfigs()
 console.log(`🚀 Huobao Drama TS server on http://localhost:${port}`)
 
 // 进程重启后内存中的轮询线程全部丢失,残留的 processing 任务永远不会完成,
